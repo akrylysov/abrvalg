@@ -12,7 +12,7 @@ The project contains:
 
 Abrvalg doesn't require any third-party libraries.
 
-How the language looks like:
+What the language looks like:
 
 .. code-block::
 
@@ -33,7 +33,7 @@ How the language looks like:
 
 You can find more examples in ``tests`` directory.
 
-How to try:
+How to try it:
 
 .. code-block::
     
