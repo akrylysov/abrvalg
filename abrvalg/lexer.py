@@ -56,11 +56,11 @@ class Lexer(object):
         ('NAME', r'[a-zA-Z_]\w*'),
         ('WHITESPACE', '[ \t]+'),
         ('NEWLINE', '\n+'),
-        ('OPERATOR', r'!'),                 # unary operator
         ('OPERATOR', r'[\+\*\-\/%]'),       # arithmetic operators
         ('OPERATOR', r'<=|>=|==|!=|<|>'),   # comparison operators
         ('OPERATOR', r'\|\||&&'),           # boolean operators
         ('OPERATOR', r'\.\.\.|\.\.'),       # range operators
+        ('OPERATOR', r'!'),                 # unary operator
         ('ASSIGN', '='),
         ('LPAREN', r'\('),
         ('RPAREN', r'\)'),
