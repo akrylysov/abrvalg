@@ -36,7 +36,7 @@ class Subparser(object):
 
     PRECEDENCE = {
         'call': 10,
-        'index': 10,
+        'subscript': 10,
 
         'unary': 9,
 
@@ -201,23 +201,23 @@ class CallExpression(InfixSubparser):
         return self.PRECEDENCE['call']
 
 
-# index_expr: NAME LBRACK expr RBRACK
+# subscript_expr: NAME LBRACK expr RBRACK
 class SubscriptOperatorExpression(InfixSubparser):
 
     def parse(self, parser, tokens, left):
         tokens.consume_expected('LBRACK')
         key = Expression().parse(parser, tokens)
         if key is None:
-            raise ParserError('IndexOperator key is required', tokens.current())
+            raise ParserError('Subscript operator key is required', tokens.current())
         tokens.consume_expected('RBRACK')
         return SubscriptOperator(left, key)
 
     def get_precedence(self, token):
-        return self.PRECEDENCE['index']
+        return self.PRECEDENCE['subscript']
 
 
 # expr: number_expr | str_expr | name_expr | group_expr | array_expr | dict_expr | prefix_expr | infix_expr | call_expr
-#     | index_expr
+#     | subscript_expr
 class Expression(Subparser):
 
     def get_prefix_subparser(self, token):
