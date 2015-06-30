@@ -6,8 +6,7 @@ Top-down recursive descent parser.
 """
 
 from collections import namedtuple
-from abrvalg.ast import Number, String, Identifier, Assignment, BinaryOperator, UnaryOperator, Call, Function, Condition, \
-    Match, WhileLoop, Return, Array, Dictionary, SubscriptOperator, ForLoop, Break, Continue, Program as ProgramNode
+from abrvalg import ast
 from abrvalg.errors import AbrvalgSyntaxError
 
 
@@ -89,7 +88,7 @@ class NumberExpression(PrefixSubparser):
 
     def parse(self, parser, tokens):
         token = tokens.consume_expected('NUMBER')
-        return Number(token.value)
+        return ast.Number(token.value)
 
 
 # str_expr: STRING
@@ -97,7 +96,7 @@ class StringExpression(PrefixSubparser):
 
     def parse(self, parser, tokens):
         token = tokens.consume_expected('STRING')
-        return String(token.value)
+        return ast.String(token.value)
 
 
 # name_expr: NAME
@@ -105,7 +104,7 @@ class NameExpression(PrefixSubparser):
 
     def parse(self, parser, tokens):
         token = tokens.consume_expected('NAME')
-        return Identifier(token.value)
+        return ast.Identifier(token.value)
 
 
 # prefix_expr: OPERATOR expr
@@ -120,7 +119,7 @@ class UnaryOperatorExpression(PrefixSubparser):
         right = Expression().parse(parser, tokens, self.get_precedence(token))
         if right is None:
             raise ParserError('Expected expression'.format(token.value), tokens.consume())
-        return UnaryOperator(token.value, right)
+        return ast.UnaryOperator(token.value, right)
 
     def get_precedence(self, token):
         return self.PRECEDENCE['unary']
@@ -143,7 +142,7 @@ class ArrayExpression(PrefixSubparser):
         tokens.consume_expected('LBRACK')
         items = ListOfExpressions().parse(parser, tokens)
         tokens.consume_expected('RBRACK')
-        return Array(items)
+        return ast.Array(items)
 
 
 # dict_expr: LCBRACK (expr COLON expr COMMA)* RCBRACK
@@ -171,7 +170,7 @@ class DictionaryExpression(PrefixSubparser):
         tokens.consume_expected('LCBRACK')
         items = self._parse_keyvals(parser, tokens)
         tokens.consume_expected('RCBRACK')
-        return Dictionary(items)
+        return ast.Dictionary(items)
 
 
 # infix_expr: expr OPERATOR expr
@@ -182,7 +181,7 @@ class BinaryOperatorExpression(InfixSubparser):
         right = Expression().parse(parser, tokens, self.get_precedence(token))
         if right is None:
             raise ParserError('Expected expression'.format(token.value), tokens.consume())
-        return BinaryOperator(token.value, left, right)
+        return ast.BinaryOperator(token.value, left, right)
 
     def get_precedence(self, token):
         return self.PRECEDENCE[token.value]
@@ -195,7 +194,7 @@ class CallExpression(InfixSubparser):
         tokens.consume_expected('LPAREN')
         arguments = ListOfExpressions().parse(parser, tokens)
         tokens.consume_expected('RPAREN')
-        return Call(left, arguments)
+        return ast.Call(left, arguments)
 
     def get_precedence(self, token):
         return self.PRECEDENCE['call']
@@ -210,7 +209,7 @@ class SubscriptOperatorExpression(InfixSubparser):
         if key is None:
             raise ParserError('Subscript operator key is required', tokens.current())
         tokens.consume_expected('RBRACK')
-        return SubscriptOperator(left, key)
+        return ast.SubscriptOperator(left, key)
 
     def get_precedence(self, token):
         return self.PRECEDENCE['subscript']
@@ -312,7 +311,7 @@ class FunctionStatement(Subparser):
             block = Block().parse(parser, tokens)
         if block is None:
             raise ParserError('Expected function body', tokens.current())
-        return Function(id_token.value, arguments, block)
+        return ast.Function(id_token.value, arguments, block)
 
 
 # cond_stmnt: IF expr COLON block (ELIF COLON block)* (ELSE COLON block)?
@@ -352,7 +351,7 @@ class ConditionalStatement(Subparser):
             raise ParserError('Expected if body', tokens.current())
         elif_conditions = self._parse_elif_conditions(parser, tokens)
         else_block = self._parse_else(parser, tokens)
-        return Condition(test, if_block, elif_conditions, else_block)
+        return ast.Condition(test, if_block, elif_conditions, else_block)
 
 
 # match_stmnt: MATCH expr COLON NEWLINE INDENT match_when+ (ELSE COLON block)? DEDENT
@@ -384,7 +383,7 @@ class MatchStatement(Subparser):
             if else_block is None:
                 raise ParserError('Expected `else` body', tokens.current())
         tokens.consume_expected('DEDENT')
-        return Match(test, patterns, else_block)
+        return ast.Match(test, patterns, else_block)
 
 
 # loop_while_stmnt: WHILE expr COLON block
@@ -400,7 +399,7 @@ class WhileLoopStatement(Subparser):
             block = Block().parse(parser, tokens)
         if block is None:
             raise ParserError('Expected loop body', tokens.current())
-        return WhileLoop(test, block)
+        return ast.WhileLoop(test, block)
 
 
 # loop_for_stmnt: FOR NAME expr COLON block
@@ -416,7 +415,7 @@ class ForLoopStatement(Subparser):
             block = Block().parse(parser, tokens)
         if block is None:
             raise ParserError('Expected loop body', tokens.current())
-        return ForLoop(id_token.value, collection, block)
+        return ast.ForLoop(id_token.value, collection, block)
 
 
 # return_stmnt: RETURN expr?
@@ -428,7 +427,7 @@ class ReturnStatement(Subparser):
         tokens.consume_expected('RETURN')
         value = Expression().parse(parser, tokens)
         tokens.consume_expected('NEWLINE')
-        return Return(value)
+        return ast.Return(value)
 
 
 # break_stmnt: BREAK
@@ -438,7 +437,7 @@ class BreakStatement(Subparser):
         if not parser.scope or parser.scope[-1] != 'loop':
             raise ParserError('Break outside of loop', tokens.current())
         tokens.consume_expected('BREAK', 'NEWLINE')
-        return Break()
+        return ast.Break()
 
 
 # cont_stmnt: CONTINUE
@@ -448,7 +447,7 @@ class ContinueStatement(Subparser):
         if not parser.scope or parser.scope[-1] != 'loop':
             raise ParserError('Continue outside of loop', tokens.current())
         tokens.consume_expected('CONTINUE', 'NEWLINE')
-        return Continue()
+        return ast.Continue()
 
 
 # assing_stmnt: expr ASSIGN expr NEWLINE
@@ -458,7 +457,7 @@ class AssignmentStatement(Subparser):
         tokens.consume_expected('ASSIGN')
         right = Expression().parse(parser, tokens)
         tokens.consume_expected('NEWLINE')
-        return Assignment(left, right)
+        return ast.Assignment(left, right)
 
 
 # expr_stmnt: assing_stmnt
@@ -507,7 +506,7 @@ class Program(Subparser):
     def parse(self, parser, tokens):
         statements = Statements().parse(parser, tokens)
         tokens.expect_end()
-        return ProgramNode(statements)
+        return ast.Program(statements)
 
 
 class Parser(object):

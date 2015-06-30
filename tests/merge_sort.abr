@@ -1,0 +1,29 @@
+func _merge(arr1, arr2):
+    result = []
+    i = 0
+    j = 0
+    while i < len(arr1) && j < len(arr2):
+        if arr1[i] < arr2[j]:
+            result = result + [arr1[i]]
+            i = i + 1
+        else:
+            result = result + [arr2[j]]
+            j = j + 1
+    for k in i..len(arr1):
+        result = result + [arr1[k]]
+    for k in j..len(arr2):
+        result = result + [arr2[k]]
+    result
+
+
+func merge_sort(arr):
+    alen = len(arr)
+    if alen <= 1:
+        return arr
+    m = int(alen / 2)
+    left = merge_sort(slice(arr, 0, m))
+    right = merge_sort(slice(arr, m, alen))
+    _merge(left, right)
+
+
+merge_sort([3, 0, 6, 5, 9, 4, 2, 8, 1, 7])
