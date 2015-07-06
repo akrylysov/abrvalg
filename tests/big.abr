@@ -19,11 +19,13 @@ x = x + x
 
 # Arrays
 # ------
-[1, 2, 3]
+a = [1, 2, 3]
+a[0] = 9
 
 # Dictionaries
 # ------------
-{'x': [2], 'y': "2"}
+d = {'x': [2], 'y': "2"}
+d['x'] = 8
 
 # Operators
 # ---------
@@ -42,6 +44,9 @@ x = x + x
 1 || 2
 1..10
 1...10
+!1
+-1
+2 * (3 + 4)
 
 # Functions
 # ---------
@@ -59,6 +64,15 @@ if 1 + 2 != 3:
     print(2)
 else:
     print(1)
+
+if 1:
+    print(1)
+elif 2:
+    print(2)
+elif 3:
+    print(3)
+else:
+    print(10)
 
 match y(1, 2):
     when 0:

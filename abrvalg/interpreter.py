@@ -45,12 +45,6 @@ class Environment(object):
     def set(self, key, val):
         self._values[key] = val
 
-    def update(self, key, val):
-        if key in self._values:
-            self._values[key] = val
-            return True
-        return False
-
     def get(self, key):
         val = self._values.get(key, None)
         if val is None and self._parent is not None:
@@ -183,13 +177,13 @@ def eval_identifier(node, env):
 
 def eval_getitem(node, env):
     collection = eval_expression(node.left, env)
-    key = int(eval_expression(node.key, env))
+    key = eval_expression(node.key, env)
     return collection[key]
 
 
 def eval_setitem(node, env):
     collection = eval_expression(node.left.left, env)
-    key = int(eval_expression(node.left.key, env))
+    key = eval_expression(node.left.key, env)
     collection[key] = eval_expression(node.right, env)
 
 
@@ -227,10 +221,10 @@ evaluators = {
 
 def eval_node(node, env):
     tp = type(node)
-    if type(node) in evaluators:
+    if tp in evaluators:
         return evaluators[tp](node, env)
     else:
-        raise Exception('Unknown node {} {}'.format(type(node).__name__, node))
+        raise Exception('Unknown node {} {}'.format(tp.__name__, node))
 
 
 def eval_expression(node, env):
