@@ -3,13 +3,11 @@ Lexer
 -----
 
 Regular expression based lexer.
-
-There is plenty of room for optimizations here.
-The simplest way to make lexer faster - join all regular expressions together to one big RE.
 """
 import re
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from abrvalg.errors import AbrvalgSyntaxError as LexerError
+from abrvalg.ttt import iteritems
 
 
 class Token(namedtuple('Token', ['name', 'value', 'line', 'column'])):
@@ -35,7 +33,7 @@ def decode_str(s):
             raise Exception('Unknown escape character {}'.format(char))
         return chars[char]
 
-    return regex.sub(replace, s)
+    return regex.sub(replace, s[1:-1])
 
 
 def decode_num(s):
@@ -55,19 +53,19 @@ class Lexer(object):
         ('NUMBER', r'\d+'),
         ('NAME', r'[a-zA-Z_]\w*'),
         ('WHITESPACE', '[ \t]+'),
-        ('NEWLINE', '\n+'),
+        ('NEWLINE', r'\n+'),
         ('OPERATOR', r'[\+\*\-\/%]'),       # arithmetic operators
         ('OPERATOR', r'<=|>=|==|!=|<|>'),   # comparison operators
         ('OPERATOR', r'\|\||&&'),           # boolean operators
         ('OPERATOR', r'\.\.\.|\.\.'),       # range operators
-        ('OPERATOR', r'!'),                 # unary operator
+        ('OPERATOR', '!'),                  # unary operator
         ('ASSIGN', '='),
         ('LPAREN', r'\('),
         ('RPAREN', r'\)'),
         ('LBRACK', r'\['),
         ('RBRACK', r'\]'),
-        ('LCBRACK', r'{'),
-        ('RCBRACK', r'}'),
+        ('LCBRACK', '{'),
+        ('RCBRACK', '}'),
         ('COLON', ':'),
         ('COMMA', ','),
     ]
@@ -99,31 +97,38 @@ class Lexer(object):
 
     def __init__(self):
         self.source_lines = []
+        self._regex = self._compile_rules(self.rules)
+
+    def _convert_rules(self, rules):
+        grouped_rules = OrderedDict()
+        for name, pattern in rules:
+            grouped_rules.setdefault(name, [])
+            grouped_rules[name].append(pattern)
+
+        for name, patterns in iteritems(grouped_rules):
+            joined_patterns = '|'.join(['({})'.format(p) for p in patterns])
+            yield '(?P<{}>{})'.format(name, joined_patterns)
+
+    def _compile_rules(self, rules):
+        return re.compile('|'.join(self._convert_rules(rules)))
 
     def _tokenize_line(self, line, line_num):
-        end_pos = 0
-        while end_pos < len(line):
-            matches = None
-            for name, pattern in self.rules:
-                regex = re.compile(pattern)
-                matches = regex.match(line, end_pos)
-                if matches is not None:
-                    end_pos = matches.end(0)
-                    if name not in self.ignore_tokens:
-                        subgroups = matches.groups()
-                        if subgroups:
-                            value = subgroups[0]
-                        else:
-                            value = matches.group(0)
-                        if name in self.decoders:
-                            value = self.decoders[name](value)
-                        elif name == 'NAME' and value in self.keywords:
-                            name = self.keywords[value]
-                            value = None
-                        yield Token(name, value, line_num, matches.start(0) + 1)
-                    break
-            if matches is None:
-                raise LexerError('Unexpected character {}'.format(line[end_pos]), line_num, end_pos + 1)
+        pos = 0
+        while pos < len(line):
+            matches = self._regex.match(line, pos)
+            if matches is not None:
+                name = matches.lastgroup
+                pos = matches.end(name)
+                if name not in self.ignore_tokens:
+                    value = matches.group(name)
+                    if name in self.decoders:
+                        value = self.decoders[name](value)
+                    elif name == 'NAME' and value in self.keywords:
+                        name = self.keywords[value]
+                        value = None
+                    yield Token(name, value, line_num, matches.start() + 1)
+            else:
+                raise LexerError('Unexpected character {}'.format(line[pos]), line_num, pos + 1)
 
     def _count_leading_characters(self, line, char):
         count = 0
