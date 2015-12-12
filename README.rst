@@ -39,4 +39,4 @@ How to try it:
     
     git clone https://github.com/akrylysov/abrvalg.git
     cd abrvalg
-    python -m abrvalg test/factorial.abr
+    python -m abrvalg tests/factorial.abr
