@@ -139,7 +139,7 @@ class Lexer(object):
         return count
 
     def _detect_indent(self, line):
-        if line[0] in [' ', '\t']:
+        if line[0] in (' ', '\t'):
             return line[0] * self._count_leading_characters(line, line[0])
 
     def tokenize(self, s):
@@ -147,8 +147,7 @@ class Lexer(object):
         tokens = []
         last_indent_level = 0
         line_num = 0
-        for line_num, line in enumerate(s.splitlines()):
-            line_num += 1
+        for line_num, line in enumerate(s.splitlines(), 1):
             line = line.rstrip()
 
             if not line:
@@ -206,12 +205,12 @@ class TokenStream(object):
     def current(self):
         try:
             return self._tokens[self._pos]
-        except:
+        except IndexError:
             last_token = self._tokens[-1]
             raise LexerError('Unexpected end of input', last_token.line, last_token.column)
 
     def expect_end(self):
-        if self._pos != len(self._tokens):
+        if not self.is_end():
             token = self.current()
             raise LexerError('End expected', token.line, token.column)
 
