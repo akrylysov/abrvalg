@@ -5,13 +5,8 @@ Parser
 Top-down recursive descent parser.
 """
 
-from collections import namedtuple
 from abrvalg import ast
 from abrvalg.errors import AbrvalgSyntaxError
-
-
-MatchPattern = namedtuple('Match', ['pattern', 'body'])
-ConditionElif = namedtuple('ConditionElif', ['test', 'body'])
 
 
 class ParserError(AbrvalgSyntaxError):
@@ -328,7 +323,7 @@ class ConditionalStatement(Subparser):
             block = Block().parse(parser, tokens)
             if block is None:
                 raise ParserError('Expected `elif` body', tokens.current())
-            conditions.append(ConditionElif(test, block))
+            conditions.append(ast.ConditionElif(test, block))
         return conditions
 
     def _parse_else(self, parser, tokens):
@@ -365,7 +360,7 @@ class MatchStatement(Subparser):
             raise ParserError('Pattern expression expected', tokens.current())
         tokens.consume_expected('COLON')
         block = Block().parse(parser, tokens)
-        return MatchPattern(pattern, block)
+        return ast.MatchPattern(pattern, block)
 
     def parse(self, parser, tokens):
         tokens.consume_expected('MATCH')
