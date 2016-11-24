@@ -47,8 +47,8 @@ class Lexer(object):
 
     rules = [
         ('COMMENT', r'#.*'),
-        ('STRING', r'"((\\"|[^"])*)"'),
-        ('STRING', r"'((\\'|[^'])*)'"),
+        ('STRING', r'"(\\"|[^"])*"'),
+        ('STRING', r"'(\\'|[^'])*'"),
         ('NUMBER', r'\d+\.\d+'),
         ('NUMBER', r'\d+'),
         ('NAME', r'[a-zA-Z_]\w*'),
